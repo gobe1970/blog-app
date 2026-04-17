@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${post.title}">Post</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+</head>
+<body>
+<div class="container mt-4" style="max-width: 800px;">
+
+    <a th:href="@{/posts}" class="btn btn-outline-secondary btn-sm mb-3">← Back to Posts</a>
+
+    <span class="badge bg-secondary mb-2" th:text="${post.category.name}">Category</span>
+    <h1 th:text="${post.title}">Post Title</h1>
+
+    <img th:if="${post.imagePath != null}"
+         th:src="@{'/uploads/' + ${post.imagePath}}"
+         class="img-fluid rounded mb-4 w-100"
+         style="max-height: 400px; object-fit: cover;"
+         th:alt="${post.title}"/>
+
+    <div class="post-content lh-lg" th:text="${post.content}">Post content here.</div>
+
+    <hr class="mt-5"/>
+    <form th:action="@{/posts/{id}/delete(id=${post.id})}"
+          method="post"
+          onsubmit="return confirm('Are you sure you want to delete this post?')">
+        <button type="submit" class="btn btn-outline-danger btn-sm">Delete Post</button>
+    </form>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ─── Properties ──────────────────────────────────────────────────── -->
+    <property name="LOG_PATH"    value="logs"/>
+    <property name="LOG_FILE"    value="${LOG_PATH}/blog-app.log"/>
+    <property name="ARCHIVE_DIR" value="${LOG_PATH}/archived"/>
+
+    <!--
+        springProfile lets Logback read the active Spring profile.
+        No need for separate logback-dev.xml / logback-prod.xml files.
+    -->
+
+    <!-- ─── CONSOLE APPENDER (dev: coloured + verbose) ─────────────────── -->
+    <springProfile name="dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <!-- %highlight adds ANSI colour by log level in dev terminals -->
+                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%cyan(%thread)] %yellow(%logger{36}) - %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- ─── CONSOLE APPENDER (prod: plain, no ANSI — log aggregators hate colour) -->
+    <springProfile name="prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- ─── ROLLING FILE APPENDER (both profiles) ───────────────────────── -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Daily rollover — one log file per day, gzipped -->
+            <fileNamePattern>${ARCHIVE_DIR}/blog-app.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <!-- Keep 30 days of history, cap total size at 500MB -->
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ─── ASYNC WRAPPER — prevents file I/O from blocking request threads -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>  <!-- never drop WARN/ERROR -->
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <!-- ─── LOGGER LEVELS — dev ─────────────────────────────────────────── -->
+    <springProfile name="dev">
+        <logger name="com.blog"                           level="DEBUG"/>
+        <logger name="org.hibernate.SQL"                  level="DEBUG"/>
+        <logger name="org.hibernate.type.descriptor.sql"  level="TRACE"/>
+        <logger name="org.springframework.web"            level="DEBUG"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- ─── LOGGER LEVELS — prod ────────────────────────────────────────── -->
+    <springProfile name="prod">
+        <logger name="com.blog"            level="INFO"/>
+        <logger name="org.hibernate.SQL"   level="OFF"/>
+        <logger name="org.springframework" level="WARN"/>
+
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </root>
+    </springProfile>
+
+</configuration>

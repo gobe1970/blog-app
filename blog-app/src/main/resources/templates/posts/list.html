@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Blog Posts</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+</head>
+<body>
+<div class="container mt-4">
+
+    <!-- Flash success message (set via RedirectAttributes) -->
+    <div th:if="${successMessage}"
+         class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Blog Posts</h1>
+        <a th:href="@{/posts/new}" class="btn btn-primary">+ New Post</a>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(posts)}" class="text-center text-muted py-5">
+        <p>No posts yet. <a th:href="@{/posts/new}">Create the first one!</a></p>
+    </div>
+
+    <!-- Post cards -->
+    <div class="row row-cols-1 row-cols-md-2 g-4" th:unless="${#lists.isEmpty(posts)}">
+        <div class="col" th:each="post : ${posts}">
+            <div class="card h-100 shadow-sm">
+
+                <!-- Post image (only rendered if imagePath is set) -->
+                <img th:if="${post.imagePath != null}"
+                     th:src="@{'/uploads/' + ${post.imagePath}}"
+                     class="card-img-top"
+                     style="height: 200px; object-fit: cover;"
+                     th:alt="${post.title}"/>
+
+                <div class="card-body">
+                    <!-- Category badge -->
+                    <span class="badge bg-secondary mb-2"
+                          th:text="${post.category.name}">Category</span>
+
+                    <h5 class="card-title" th:text="${post.title}">Post Title</h5>
+
+                    <!-- Truncate content preview to 120 chars -->
+                    <p class="card-text text-muted"
+                       th:text="${#strings.abbreviate(post.content, 120)}">Content...</p>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <a th:href="@{/posts/{id}(id=${post.id})}"
+                       class="btn btn-sm btn-outline-primary">Read More</a>
+
+                    <!-- Delete — uses POST form (HTML forms only support GET/POST) -->
+                    <form th:action="@{/posts/{id}/delete(id=${post.id})}"
+                          method="post"
+                          onsubmit="return confirm('Delete this post?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
